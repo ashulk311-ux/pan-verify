@@ -13,6 +13,74 @@ function formatDateToDDMMYYYY(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
+// Retry mechanism with exponential backoff
+async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Don't retry on authentication errors (subscription expired, etc.)
+      if (error.response?.status === 401) {
+        throw error;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+// Enhanced error categorization
+function categorizeError(error) {
+  if (error.response?.status === 401) {
+    return {
+      type: 'AUTHENTICATION_ERROR',
+      message: 'API authentication failed',
+      details: error.response.data,
+      retryable: false
+    };
+  }
+  
+  if (error.response?.status === 429) {
+    return {
+      type: 'RATE_LIMIT_ERROR',
+      message: 'API rate limit exceeded',
+      details: error.response.data,
+      retryable: true
+    };
+  }
+  
+  if (error.response?.status >= 500) {
+    return {
+      type: 'SERVER_ERROR',
+      message: 'External API server error',
+      details: error.response.data,
+      retryable: true
+    };
+  }
+  
+  if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+    return {
+      type: 'NETWORK_ERROR',
+      message: 'Network connection error',
+      details: error.message,
+      retryable: true
+    };
+  }
+  
+  return {
+    type: 'UNKNOWN_ERROR',
+    message: 'Unknown error occurred',
+    details: error.message,
+    retryable: false
+  };
+}
+
 // PAN verification endpoint
 router.post('/verify', [
   body('pan_number').isLength({ min: 10, max: 10 }).withMessage('PAN must be 10 characters'),
@@ -32,26 +100,29 @@ router.post('/verify', [
 
     const { pan_number, name, date_of_birth, father_name } = req.body;
 
-    // 1️⃣ Authenticate with Sandbox API
-    const authRes = await fetch("https://api.sandbox.co.in/authenticate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": SANDBOX_API_KEY,
-        "x-api-secret": SANDBOX_API_SECRET,
-      },
+    // 1️⃣ Authenticate with Sandbox API (with retry)
+    const authRes = await retryWithBackoff(async () => {
+      const response = await fetch("https://api.sandbox.co.in/authenticate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": SANDBOX_API_KEY,
+          "x-api-secret": SANDBOX_API_SECRET,
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        const error = new Error('Authentication failed');
+        error.response = { status: response.status, data: errorData };
+        throw error;
+      }
+      
+      return response;
     });
 
     const authData = await authRes.json();
     console.log("AUTH RESPONSE:", authData);
-
-    if (!authRes.ok) {
-      console.error("AUTH ERROR:", authData);
-      return res.status(authRes.status).json({
-        error: 'Authentication failed',
-        details: authData
-      });
-    }
 
     const accessToken = authData.access_token || authData.data?.access_token;
     console.log("Access Token:", accessToken);
@@ -59,23 +130,34 @@ router.post('/verify', [
     const formattedDob = formatDateToDDMMYYYY(date_of_birth);
     console.log("Formatted DOB:", formattedDob);
 
-    // 2️⃣ Verify PAN using access_token
-    const verifyRes = await fetch("https://api.sandbox.co.in/kyc/pan/verify", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "authorization": accessToken,
-        "x-api-key": SANDBOX_API_KEY,
-        "x-accept-cache": "true",
-      },
-      body: JSON.stringify({
-        "@entity": "in.co.sandbox.kyc.pan_verification.request",
-        pan: pan_number,
-        name_as_per_pan: name,
-        date_of_birth: formattedDob,
-        consent: "Y",
-        reason: "KYC verification",
-      }),
+    // 2️⃣ Verify PAN using access_token (with retry)
+    const verifyRes = await retryWithBackoff(async () => {
+      const response = await fetch("https://api.sandbox.co.in/kyc/pan/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "authorization": accessToken,
+          "x-api-key": SANDBOX_API_KEY,
+          "x-accept-cache": "true",
+        },
+        body: JSON.stringify({
+          "@entity": "in.co.sandbox.kyc.pan_verification.request",
+          pan: pan_number,
+          name_as_per_pan: name,
+          date_of_birth: formattedDob,
+          consent: "Y",
+          reason: "KYC verification",
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        const error = new Error('Verification failed');
+        error.response = { status: response.status, data: errorData };
+        throw error;
+      }
+      
+      return response;
     });
 
     const verifyData = await verifyRes.json();
@@ -117,9 +199,14 @@ router.post('/verify', [
 
   } catch (error) {
     console.error("Error in PAN verification:", error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: error.message
+    
+    const categorizedError = categorizeError(error);
+    
+    res.status(error.response?.status || 500).json({
+      error: categorizedError.message,
+      type: categorizedError.type,
+      details: categorizedError.details,
+      retryable: categorizedError.retryable
     });
   }
 });
@@ -137,6 +224,7 @@ router.post('/verify-bulk', async (req, res) => {
 
     const results = [];
     const batchSize = 5; // Process in batches to avoid rate limiting
+    const errors = [];
 
     for (let i = 0; i < records.length; i += batchSize) {
       const batch = records.slice(i, i + batchSize);
@@ -146,47 +234,60 @@ router.post('/verify-bulk', async (req, res) => {
         try {
           const { pan_number, name, date_of_birth, father_name } = record;
 
-          // 1️⃣ Authenticate
-          const authRes = await fetch("https://api.sandbox.co.in/authenticate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": SANDBOX_API_KEY,
-              "x-api-secret": SANDBOX_API_SECRET,
-            },
+          // 1️⃣ Authenticate (with retry)
+          const authRes = await retryWithBackoff(async () => {
+            const response = await fetch("https://api.sandbox.co.in/authenticate", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-api-key": SANDBOX_API_KEY,
+                "x-api-secret": SANDBOX_API_SECRET,
+              },
+            });
+            
+            if (!response.ok) {
+              const errorData = await response.json();
+              const error = new Error('Authentication failed');
+              error.response = { status: response.status, data: errorData };
+              throw error;
+            }
+            
+            return response;
           });
 
           const authData = await authRes.json();
           
-          if (!authRes.ok) {
-            return {
-              ...record,
-              status: 'failed',
-              error_message: 'Authentication failed',
-              verified_date: new Date()
-            };
-          }
-
           const accessToken = authData.access_token || authData.data?.access_token;
           const formattedDob = formatDateToDDMMYYYY(date_of_birth);
 
-          // 2️⃣ Verify PAN
-          const verifyRes = await fetch("https://api.sandbox.co.in/kyc/pan/verify", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "authorization": accessToken,
-              "x-api-key": SANDBOX_API_KEY,
-              "x-accept-cache": "true",
-            },
-            body: JSON.stringify({
-              "@entity": "in.co.sandbox.kyc.pan_verification.request",
-              pan: pan_number,
-              name_as_per_pan: name,
-              date_of_birth: formattedDob,
-              consent: "Y",
-              reason: "KYC verification",
-            }),
+          // 2️⃣ Verify PAN (with retry)
+          const verifyRes = await retryWithBackoff(async () => {
+            const response = await fetch("https://api.sandbox.co.in/kyc/pan/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "authorization": accessToken,
+                "x-api-key": SANDBOX_API_KEY,
+                "x-accept-cache": "true",
+              },
+              body: JSON.stringify({
+                "@entity": "in.co.sandbox.kyc.pan_verification.request",
+                pan: pan_number,
+                name_as_per_pan: name,
+                date_of_birth: formattedDob,
+                consent: "Y",
+                reason: "KYC verification",
+              }),
+            });
+            
+            if (!response.ok) {
+              const errorData = await response.json();
+              const error = new Error('Verification failed');
+              error.response = { status: response.status, data: errorData };
+              throw error;
+            }
+            
+            return response;
           });
 
           const verifyData = await verifyRes.json();
@@ -218,10 +319,17 @@ router.post('/verify-bulk', async (req, res) => {
           };
 
         } catch (error) {
+          const categorizedError = categorizeError(error);
+          errors.push({
+            pan_number: record.pan_number,
+            error: categorizedError
+          });
+          
           return {
             ...record,
             status: 'failed',
-            error_message: error.message,
+            error_message: categorizedError.message,
+            error_type: categorizedError.type,
             verified_date: new Date()
           };
         }
@@ -239,14 +347,20 @@ router.post('/verify-bulk', async (req, res) => {
     res.json({
       success: true,
       total_records: records.length,
-      results
+      results,
+      errors: errors.length > 0 ? errors : undefined
     });
 
   } catch (error) {
     console.error("Error in bulk PAN verification:", error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: error.message
+    
+    const categorizedError = categorizeError(error);
+    
+    res.status(error.response?.status || 500).json({
+      error: categorizedError.message,
+      type: categorizedError.type,
+      details: categorizedError.details,
+      retryable: categorizedError.retryable
     });
   }
 });
