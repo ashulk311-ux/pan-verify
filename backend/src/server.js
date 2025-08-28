@@ -15,6 +15,7 @@ const adminRoutes = require('./routes/admin');
 const fileRoutes = require('./routes/files');
 const statsRoutes = require('./routes/stats');
 const apiCallRoutes = require('./routes/apiCalls');
+const panVerificationRoutes = require('./routes/panVerification');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -52,6 +53,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/api-calls', apiCallRoutes);
+app.use('/api/pan-verification', panVerificationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
