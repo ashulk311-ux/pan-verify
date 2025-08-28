@@ -20,5 +20,6 @@ router.post('/verify-single', authenticateToken, singlePanValidation, panControl
 router.post('/verify-multiple', authenticateToken, panController.verifyMultiplePan);
 router.get('/verifications', authenticateToken, panController.getVerifications);
 router.get('/verifications/:id', authenticateToken, panController.getVerificationById);
+router.get('/files/:fileId/records', authenticateToken, panController.getFileRecords);
 
 module.exports = router;

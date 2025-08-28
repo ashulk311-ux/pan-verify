@@ -6,6 +6,11 @@ const aadhaarPanLinkingSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  file_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'UploadedFile',
+    required: true
+  },
   aadhaar_number: {
     type: String,
     required: true,
@@ -49,6 +54,7 @@ const aadhaarPanLinkingSchema = new mongoose.Schema({
 
 // Indexes for better query performance
 aadhaarPanLinkingSchema.index({ user_id: 1 });
+aadhaarPanLinkingSchema.index({ file_id: 1 });
 aadhaarPanLinkingSchema.index({ status: 1 });
 aadhaarPanLinkingSchema.index({ aadhaar_number: 1 });
 aadhaarPanLinkingSchema.index({ pan_number: 1 });

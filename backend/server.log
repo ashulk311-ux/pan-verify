@@ -1,0 +1,349 @@
+
+> pan-kyc-backend@1.0.0 start
+> node src/server.js
+
+[dotenv@17.2.1] injecting env (10) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+(node:26955) [MONGODB DRIVER] Warning: useNewUrlParser is a deprecated option: useNewUrlParser has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26955) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+MongoDB Connected: ac-syu7qxj-shard-00-00.idbaui6.mongodb.net
+PAN KYC API server running on port 3002
+::1 - - [28/Aug/2025:09:12:10 +0000] "GET /api/health HTTP/1.1" 200 50 "-" "curl/8.7.1"
+Auth middleware called for: GET /files
+::1 - - [28/Aug/2025:09:13:04 +0000] "GET /api/files/files HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /files
+::1 - - [28/Aug/2025:09:13:05 +0000] "GET /api/files/files HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: POST /upload
+::1 - - [28/Aug/2025:09:13:20 +0000] "POST /api/files/upload HTTP/1.1" 400 28 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: POST /upload
+Processing file: PAN aadhar KYC.xlsx at path: uploads/file-1756372470596-508709597.xlsx
+Detected columns: [ 'Name', 'DOB', 'PAN No', 'AADHAAR' ]
+Detected Aadhaar-PAN linking format, adapting for PAN KYC
+Column mapping: { pan_number: 'PAN No', name: 'Name', date_of_birth: 'DOB' }
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Cleaned up file: uploads/file-1756372470596-508709597.xlsx
+::1 - - [28/Aug/2025:09:15:17 +0000] "POST /api/pan/upload HTTP/1.1" 200 10906 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /verifications
+::1 - - [28/Aug/2025:09:15:17 +0000] "GET /api/pan/verifications?page=1&limit=100 HTTP/1.1" 200 15701 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: POST /upload
+Processing file: PAN aadhar KYC.xlsx at path: uploads/file-1756372544322-868597712.xlsx
+Detected columns: [ 'Name', 'DOB', 'PAN No', 'AADHAAR' ]
+Detected Aadhaar-PAN linking format, adapting for PAN KYC
+Column mapping: { pan_number: 'PAN No', name: 'Name', date_of_birth: 'DOB' }
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Cleaned up file: uploads/file-1756372544322-868597712.xlsx
+::1 - - [28/Aug/2025:09:16:36 +0000] "POST /api/pan/upload HTTP/1.1" 200 10581 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /verifications
+::1 - - [28/Aug/2025:09:16:36 +0000] "GET /api/pan/verifications?page=1&limit=100 HTTP/1.1" 200 15700 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /verifications
+::1 - - [28/Aug/2025:09:16:44 +0000] "GET /api/pan/verifications?page=1&limit=100 HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /verifications
+::1 - - [28/Aug/2025:09:16:44 +0000] "GET /api/pan/verifications?page=1&limit=100 HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: POST /upload
+Processing file: PAN aadhar KYC.xlsx at path: uploads/file-1756372620490-439343130.xlsx
+Detected columns: [ 'Name', 'DOB', 'PAN No', 'AADHAAR' ]
+Detected Aadhaar-PAN linking format, adapting for PAN KYC
+Column mapping: { pan_number: 'PAN No', name: 'Name', date_of_birth: 'DOB' }
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Cleaned up file: uploads/file-1756372620490-439343130.xlsx
+::1 - - [28/Aug/2025:09:17:51 +0000] "POST /api/pan/upload HTTP/1.1" 200 10580 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /verifications
+::1 - - [28/Aug/2025:09:17:51 +0000] "GET /api/pan/verifications?page=1&limit=100 HTTP/1.1" 200 16021 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: POST /upload
+Processing file: PAN aadhar KYC.xlsx at path: uploads/file-1756372717891-170788472.xlsx
+Detected columns: [ 'Name', 'DOB', 'PAN No', 'AADHAAR' ]
+Detected Aadhaar-PAN linking format, adapting for PAN KYC
+Column mapping: { pan_number: 'PAN No', name: 'Name', date_of_birth: 'DOB' }
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Cleaned up file: uploads/file-1756372717891-170788472.xlsx
+::1 - - [28/Aug/2025:09:19:27 +0000] "POST /api/pan/upload HTTP/1.1" 200 10901 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: POST /upload
+Processing file: PAN aadhar KYC.xlsx at path: uploads/file-1756372893455-438908520.xlsx
+Detected columns: [ 'Name', 'DOB', 'PAN No', 'AADHAAR' ]
+Detected Aadhaar-PAN linking format, adapting for PAN KYC
+Column mapping: { pan_number: 'PAN No', name: 'Name', date_of_birth: 'DOB' }
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+::1 - - [28/Aug/2025:09:22:17 +0000] "GET /api/aadhaar/files HTTP/1.1" 404 27 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+::1 - - [28/Aug/2025:09:22:18 +0000] "GET /api/aadhaar/files HTTP/1.1" 404 27 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Cleaned up file: uploads/file-1756372893455-438908520.xlsx
+::1 - - [28/Aug/2025:09:22:28 +0000] "POST /api/pan/upload HTTP/1.1" 200 10584 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: POST /upload
+Processing file: PAN aadhar KYC.xlsx at path: uploads/file-1756373049992-79291486.xlsx
+Detected columns: [ 'Name', 'DOB', 'PAN No', 'AADHAAR' ]
+Detected Aadhaar-PAN linking format, adapting for PAN KYC
+Column mapping: { pan_number: 'PAN No', name: 'Name', date_of_birth: 'DOB' }
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Cleaned up file: uploads/file-1756373049992-79291486.xlsx
+::1 - - [28/Aug/2025:09:24:57 +0000] "POST /api/pan/upload HTTP/1.1" 200 11222 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: POST /upload
+Processing file: PAN aadhar KYC.xlsx at path: uploads/file-1756373161498-842599746.xlsx
+Detected columns: [ 'Name', 'DOB', 'PAN No', 'AADHAAR' ]
+Detected Aadhaar-PAN linking format, adapting for PAN KYC
+Column mapping: { pan_number: 'PAN No', name: 'Name', date_of_birth: 'DOB' }
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Using MOCK PAN verification mode
+API call tracked for user 68aa88c59607594632514a96, provider: mock_sandbox
+Cleaned up file: uploads/file-1756373161498-842599746.xlsx
+::1 - - [28/Aug/2025:09:26:51 +0000] "POST /api/pan/upload HTTP/1.1" 200 10585 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /files/upload_1756373097816/records
+::1 - - [28/Aug/2025:09:30:28 +0000] "GET /api/files/files/upload_1756373097816/records?status=all&page=1&limit=50 HTTP/1.1" 400 34 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /files/upload_1756373211584/records
+::1 - - [28/Aug/2025:09:30:30 +0000] "GET /api/files/files/upload_1756373211584/records?status=all&page=1&limit=50 HTTP/1.1" 400 34 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: DELETE /files/upload_1756373211584
+::1 - - [28/Aug/2025:09:30:49 +0000] "DELETE /api/files/files/upload_1756373211584 HTTP/1.1" 400 34 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+::1 - - [28/Aug/2025:09:31:17 +0000] "GET /api/aadhaar/files HTTP/1.1" 404 27 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+::1 - - [28/Aug/2025:09:31:17 +0000] "GET /api/aadhaar/files HTTP/1.1" 404 27 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /user-stats
+::1 - - [28/Aug/2025:09:33:34 +0000] "GET /api/api-calls/user-stats HTTP/1.1" 200 92 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /user-stats
+::1 - - [28/Aug/2025:09:33:34 +0000] "GET /api/api-calls/user-stats HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /user-stats
+::1 - - [28/Aug/2025:09:33:52 +0000] "GET /api/api-calls/user-stats HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+Auth middleware called for: GET /user-stats
+::1 - - [28/Aug/2025:09:33:52 +0000] "GET /api/api-calls/user-stats HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"

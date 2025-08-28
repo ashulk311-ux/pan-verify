@@ -36,7 +36,29 @@ const upload = multer({
       cb(new Error('Invalid file type. Only Excel and CSV files are allowed.'));
     }
   }
-});
+}).single('file');
+
+// Multer error handling middleware
+const handleMulterUpload = (req, res, next) => {
+  upload(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      // A Multer error occurred when uploading
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large. Please use a file smaller than 10MB.' });
+      }
+      return res.status(400).json({ error: `Upload error: ${err.message}` });
+    } else if (err) {
+      // An unknown error occurred when uploading
+      if (err.message.includes('Invalid file type')) {
+        return res.status(400).json({ error: err.message });
+      }
+      return res.status(400).json({ error: `Upload error: ${err.message}` });
+    }
+    
+    // Everything went fine, proceed to the upload handler
+    next();
+  });
+};
 
 // Upload file and process PAN data
 const uploadFile = async (req, res) => {
@@ -71,20 +93,67 @@ const uploadFile = async (req, res) => {
       const worksheet = workbook.Sheets[sheetName];
       const data = xlsx.utils.sheet_to_json(worksheet);
 
+      console.log('File processing debug:', {
+        filename: file.originalname,
+        sheetName,
+        dataLength: data.length,
+        firstRow: data[0],
+        columns: data.length > 0 ? Object.keys(data[0]) : []
+      });
+
+      // Detect file format and map columns flexibly
+      const firstRow = data[0];
+      const columns = Object.keys(firstRow);
+      
+      console.log('Detected columns:', columns);
+      
+      // Define possible column name variations
+      const columnMappings = {
+        pan_number: ['pan_number', 'PAN Number', 'PAN No', 'PAN', 'pan'],
+        name: ['name', 'Name', 'NAME', 'full_name', 'Full Name'],
+        father_name: ['father_name', 'Father Name', 'fatherName', 'FATHER_NAME'],
+        date_of_birth: ['date_of_birth', 'Date of Birth', 'DOB', 'dob', 'birth_date']
+      };
+      
+      // Map detected columns to standard names
+      const columnMap = {};
+      for (const [standardName, variations] of Object.entries(columnMappings)) {
+        const foundColumn = variations.find(variant => columns.includes(variant));
+        if (foundColumn) {
+          columnMap[standardName] = foundColumn;
+        }
+      }
+      
+      console.log('Column mapping:', columnMap);
+      
+      // Check if all required columns are found (father_name is optional for Aadhaar-PAN format)
+      const requiredColumns = ['pan_number', 'name', 'date_of_birth'];
+      const missingColumns = requiredColumns.filter(col => !columnMap[col]);
+      
+      if (missingColumns.length > 0) {
+        throw new Error(`Missing required columns: ${missingColumns.join(', ')}. Detected columns: ${columns.join(', ')}`);
+      }
+
       // Validate and process each row
       panRecords = data.map((row, index) => {
+        // Extract values using column mapping
+        const panNumber = row[columnMap.pan_number];
+        const name = row[columnMap.name];
+        const fatherName = columnMap.father_name ? row[columnMap.father_name] : 'Not Available';
+        const dateOfBirth = row[columnMap.date_of_birth];
+        
         // Validate required fields
-        if (!row.pan_number || !row.name || !row.father_name || !row.date_of_birth) {
-          throw new Error(`Row ${index + 1}: Missing required fields`);
+        if (!panNumber || !name || !dateOfBirth) {
+          throw new Error(`Row ${index + 1}: Missing required fields. Available fields: ${Object.keys(row).join(', ')}`);
         }
 
         return {
           user_id: userId,
           file_id: uploadedFile._id,
-          panNumber: row.pan_number.toString().trim(),
-          name: row.name.toString().trim(),
-          fatherName: row.father_name.toString().trim(),
-          dateOfBirth: new Date(row.date_of_birth),
+          panNumber: panNumber.toString().trim(),
+          name: name.toString().trim(),
+          fatherName: fatherName.toString().trim(),
+          dateOfBirth: new Date(dateOfBirth),
           verificationStatus: 'pending'
         };
       });
@@ -115,6 +184,8 @@ const uploadFile = async (req, res) => {
       });
 
     } catch (processError) {
+      console.error('File processing error:', processError);
+      
       // Update file status to failed
       await UploadedFile.findByIdAndUpdate(uploadedFile._id, {
         status: 'failed'
@@ -160,6 +231,16 @@ const getFileRecords = async (req, res) => {
     const { fileId } = req.params;
     const { status, page = 1, limit = 50 } = req.query;
 
+    // Validate fileId
+    if (!fileId || fileId === 'undefined') {
+      return res.status(400).json({ error: 'Invalid file ID' });
+    }
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ error: 'Invalid file ID format' });
+    }
+
     const query = {
       user_id: userId,
       file_id: fileId
@@ -199,6 +280,16 @@ const retryVerification = async (req, res) => {
     const userId = req.user.id;
     const { fileId } = req.params;
     const { recordIds } = req.body;
+
+    // Validate fileId
+    if (!fileId || fileId === 'undefined') {
+      return res.status(400).json({ error: 'Invalid file ID' });
+    }
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ error: 'Invalid file ID format' });
+    }
 
     if (!recordIds || !Array.isArray(recordIds)) {
       return res.status(400).json({ error: 'Record IDs are required' });
@@ -253,6 +344,16 @@ const getFileStats = async (req, res) => {
     const userId = req.user.id;
     const { fileId } = req.params;
 
+    // Validate fileId
+    if (!fileId || fileId === 'undefined') {
+      return res.status(400).json({ error: 'Invalid file ID' });
+    }
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ error: 'Invalid file ID format' });
+    }
+
     const stats = await PanRecord.aggregate([
       {
         $match: {
@@ -292,6 +393,16 @@ const deleteUserFile = async (req, res) => {
     const userId = req.user.id;
     const { fileId } = req.params;
 
+    // Validate fileId
+    if (!fileId || fileId === 'undefined') {
+      return res.status(400).json({ error: 'Invalid file ID' });
+    }
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ error: 'Invalid file ID format' });
+    }
+
     const fileDoc = await UploadedFile.findOne({ _id: fileId, user_id: userId });
     if (!fileDoc) {
       return res.status(404).json({ error: 'File not found' });
@@ -320,6 +431,7 @@ const deleteUserFile = async (req, res) => {
 
 module.exports = {
   upload,
+  handleMulterUpload,
   uploadFile,
   getUserFiles,
   getFileRecords,

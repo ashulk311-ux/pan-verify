@@ -8,7 +8,7 @@ const router = express.Router();
 router.use(authenticateToken);
 
 // Upload file
-router.post('/upload', fileController.upload.single('file'), fileController.uploadFile);
+router.post('/upload', fileController.handleMulterUpload, fileController.uploadFile);
 
 // Get user's uploaded files
 router.get('/files', fileController.getUserFiles);

@@ -13,14 +13,24 @@ class PanService {
     return panRegex.test(pan.toUpperCase());
   }
 
-  // Verify PAN using external API
+  // Verify PAN using external API or mock mode
   static async verifyPan(verification) {
     try {
       // Update status to processing
       await PanVerification.findByIdAndUpdate(verification._id, { status: 'processing' });
 
-      // Call external PAN verification API
-      const apiResponse = await this.callPanVerificationAPI(verification);
+      // Check if we should use mock mode (when no API key is available)
+      const apiKey = process.env.SANDBOX_API_KEY;
+      const useMockMode = !apiKey || apiKey === 'your_sandbox_api_key' || process.env.NODE_ENV === 'development' || process.env.USE_MOCK_MODE === 'true';
+
+      let apiResponse;
+      if (useMockMode) {
+        console.log('Using MOCK PAN verification mode');
+        apiResponse = await this.mockPanVerification(verification);
+      } else {
+        console.log('Using REAL Sandbox API for PAN verification');
+        apiResponse = await this.callPanVerificationAPI(verification);
+      }
 
       if (apiResponse.success) {
         // Update with verification data
@@ -90,6 +100,60 @@ class PanService {
         id: verification._id,
         status: 'failed',
         error: error.message
+      };
+    }
+  }
+
+  // Mock PAN verification for testing and development
+  static async mockPanVerification(verification) {
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+      // Simulate some failures (10% failure rate for testing)
+      const shouldFail = Math.random() < 0.1;
+      
+      if (shouldFail) {
+        return {
+          success: false,
+          error: 'Mock verification failed - PAN not found in database'
+        };
+      }
+
+      // Generate mock verification data
+      const mockData = {
+        pan_number: verification.pan_number,
+        name: verification.name,
+        father_name: verification.father_name,
+        date_of_birth: verification.date_of_birth,
+        verification_status: 'VERIFIED',
+        verification_date: new Date().toISOString(),
+        api_provider: 'MOCK_SANDBOX',
+        mock_mode: true,
+        additional_data: {
+          pan_type: 'Individual',
+          pan_status: 'Active',
+          last_updated: new Date().toISOString(),
+          source: 'Mock Verification System'
+        }
+      };
+
+      // Track mock API call
+      try {
+        await ApiCallTracker.incrementApiCall(verification.user_id, 'mock_sandbox');
+      } catch (error) {
+        console.error('Error tracking mock API call:', error);
+      }
+
+      return {
+        success: true,
+        data: mockData
+      };
+    } catch (error) {
+      console.error('Mock PAN verification error:', error);
+      return {
+        success: false,
+        error: 'Mock verification failed: ' + error.message
       };
     }
   }
