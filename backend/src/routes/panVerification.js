@@ -3,14 +3,28 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 
 // Sandbox API credentials
-const SANDBOX_API_KEY = 'key_live_4e188ef5754649e5aceaff5733a62c30';
-const SANDBOX_API_SECRET = 'secret_live_0afc41875f284de5a2e563b5d6d3f3e9';
+const SANDBOX_API_KEY = 'key_live_6edea225e1354559b2422d3921c795cf';
+const SANDBOX_API_SECRET = 'secret_live_03078556231c41879cd6ab46e1d6a07f';
 
-// Helper function to format date
-function formatDateToDDMMYYYY(dateStr) {
-  // dateStr expected in "yyyy-mm-dd"
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}/${year}`;
+// Helper function to format date to dd/mm/yyyy (API expected format)
+function formatDateToDDMMYY(dateStr) {
+  try {
+    // Handle ISO date string (e.g., "2003-09-29T18:38:50.000Z")
+    if (dateStr.includes('T')) {
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${day}/${month}/${year}`;
+    }
+    
+    // Handle "yyyy-mm-dd" format - convert to dd/mm/yyyy
+    const [year, month, day] = dateStr.split("-");
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.error('Error formatting date:', error.message, 'Input:', dateStr);
+    throw new Error(`Date formatting failed: ${error.message}`);
+  }
 }
 
 // Retry mechanism with exponential backoff
@@ -122,15 +136,33 @@ router.post('/verify', [
     });
 
     const authData = await authRes.json();
-    console.log("AUTH RESPONSE:", authData);
+    console.log("🔐 AUTH RESPONSE:", JSON.stringify(authData, null, 2));
 
     const accessToken = authData.access_token || authData.data?.access_token;
-    console.log("Access Token:", accessToken);
+    console.log("🔑 Access Token:", accessToken);
 
-    const formattedDob = formatDateToDDMMYYYY(date_of_birth);
-    console.log("Formatted DOB:", formattedDob);
+    const formattedDob = formatDateToDDMMYY(date_of_birth);
+    console.log("📅 Formatted DOB (dd/mm/yy):", formattedDob);
 
     // 2️⃣ Verify PAN using access_token (with retry)
+    const verifyPayload = {
+      "@entity": "in.co.sandbox.kyc.pan_verification.request",
+      pan: pan_number,
+      name_as_per_pan: name,
+      date_of_birth: formattedDob,
+      consent: "Y",
+      reason: "KYC verification",
+    };
+    
+    console.log("📤 VERIFY PAYLOAD:", JSON.stringify(verifyPayload, null, 2));
+    console.log("🌐 API URL: https://api.sandbox.co.in/kyc/pan/verify");
+    console.log("🔑 Headers:", {
+      "Content-Type": "application/json",
+      "authorization": accessToken ? "***" : "MISSING",
+      "x-api-key": SANDBOX_API_KEY ? "***" : "MISSING",
+      "x-accept-cache": "true",
+    });
+
     const verifyRes = await retryWithBackoff(async () => {
       const response = await fetch("https://api.sandbox.co.in/kyc/pan/verify", {
         method: "POST",
@@ -140,18 +172,14 @@ router.post('/verify', [
           "x-api-key": SANDBOX_API_KEY,
           "x-accept-cache": "true",
         },
-        body: JSON.stringify({
-          "@entity": "in.co.sandbox.kyc.pan_verification.request",
-          pan: pan_number,
-          name_as_per_pan: name,
-          date_of_birth: formattedDob,
-          consent: "Y",
-          reason: "KYC verification",
-        }),
+        body: JSON.stringify(verifyPayload),
       });
+      
+      console.log("📡 HTTP Status:", response.status, response.statusText);
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.log("❌ VERIFY ERROR:", JSON.stringify(errorData, null, 2));
         const error = new Error('Verification failed');
         error.response = { status: response.status, data: errorData };
         throw error;
@@ -161,7 +189,11 @@ router.post('/verify', [
     });
 
     const verifyData = await verifyRes.json();
-    console.log("VERIFY RESPONSE:", verifyData);
+    console.log("✅ VERIFY RESPONSE:", JSON.stringify(verifyData, null, 2));
+
+    // Extract request ID from response
+    const requestId = verifyData.request_id || verifyData.data?.request_id || verifyData.id;
+    console.log("🆔 Request ID:", requestId);
 
     // Process the verification response
     let verificationResult = {
@@ -171,24 +203,29 @@ router.post('/verify', [
       father_name,
       verified_date: new Date(),
       status: 'pending',
+      request_id: requestId,
       api_response: verifyData
     };
 
     // Determine status based on API response
     if (verifyRes.ok) {
-      if (verifyData.status === 'success' || verifyData.data?.status === 'success') {
+      if (verifyData.status === 'success' || verifyData.data?.status === 'success' || verifyData.data?.status === 'valid') {
         verificationResult.status = 'success';
         verificationResult.verified_data = verifyData.data || verifyData;
+        console.log(`🎉 FINAL STATUS for PAN ${pan_number}: SUCCESS`);
       } else if (verifyData.status === 'failed' || verifyData.data?.status === 'failed') {
         verificationResult.status = 'failed';
         verificationResult.error_message = verifyData.message || verifyData.data?.message || 'Verification failed';
+        console.log(`❌ FINAL STATUS for PAN ${pan_number}: FAILED - ${verificationResult.error_message}`);
       } else {
         verificationResult.status = 'pending';
         verificationResult.error_message = 'Verification in progress';
+        console.log(`⏳ FINAL STATUS for PAN ${pan_number}: PENDING - Verification in progress`);
       }
     } else {
       verificationResult.status = 'failed';
       verificationResult.error_message = verifyData.message || 'API verification failed';
+      console.log(`💥 FINAL STATUS for PAN ${pan_number}: FAILED - API error`);
     }
 
     res.json({
@@ -256,11 +293,24 @@ router.post('/verify-bulk', async (req, res) => {
           });
 
           const authData = await authRes.json();
+          console.log(`🔐 BULK AUTH for PAN ${pan_number}:`, JSON.stringify(authData, null, 2));
           
           const accessToken = authData.access_token || authData.data?.access_token;
-          const formattedDob = formatDateToDDMMYYYY(date_of_birth);
+          const formattedDob = formatDateToDDMMYY(date_of_birth);
+          console.log(`📅 BULK Formatted DOB for PAN ${pan_number}:`, formattedDob);
 
           // 2️⃣ Verify PAN (with retry)
+          const verifyPayload = {
+            "@entity": "in.co.sandbox.kyc.pan_verification.request",
+            pan: pan_number,
+            name_as_per_pan: name,
+            date_of_birth: formattedDob,
+            consent: "Y",
+            reason: "KYC verification",
+          };
+          
+          console.log(`📤 BULK VERIFY PAYLOAD for PAN ${pan_number}:`, JSON.stringify(verifyPayload, null, 2));
+
           const verifyRes = await retryWithBackoff(async () => {
             const response = await fetch("https://api.sandbox.co.in/kyc/pan/verify", {
               method: "POST",
@@ -270,18 +320,14 @@ router.post('/verify-bulk', async (req, res) => {
                 "x-api-key": SANDBOX_API_KEY,
                 "x-accept-cache": "true",
               },
-              body: JSON.stringify({
-                "@entity": "in.co.sandbox.kyc.pan_verification.request",
-                pan: pan_number,
-                name_as_per_pan: name,
-                date_of_birth: formattedDob,
-                consent: "Y",
-                reason: "KYC verification",
-              }),
+              body: JSON.stringify(verifyPayload),
             });
+            
+            console.log(`📡 BULK HTTP Status for PAN ${pan_number}:`, response.status, response.statusText);
             
             if (!response.ok) {
               const errorData = await response.json();
+              console.log(`❌ BULK VERIFY ERROR for PAN ${pan_number}:`, JSON.stringify(errorData, null, 2));
               const error = new Error('Verification failed');
               error.response = { status: response.status, data: errorData };
               throw error;
@@ -291,13 +337,20 @@ router.post('/verify-bulk', async (req, res) => {
           });
 
           const verifyData = await verifyRes.json();
+          console.log(`✅ BULK VERIFY RESPONSE for PAN ${pan_number}:`, JSON.stringify(verifyData, null, 2));
+
+          // Extract request ID from response
+          const requestId = verifyData.request_id || verifyData.data?.request_id || verifyData.id;
+          console.log(`🆔 BULK Request ID for PAN ${pan_number}:`, requestId);
 
           let status = 'pending';
           let error_message = null;
 
           if (verifyRes.ok) {
-            if (verifyData.status === 'success' || verifyData.data?.status === 'success') {
+            // Check if the verification was successful
+            if (verifyData.status === 'success' || verifyData.data?.status === 'success' || verifyData.data?.status === 'valid') {
               status = 'success';
+              error_message = null;
             } else if (verifyData.status === 'failed' || verifyData.data?.status === 'failed') {
               status = 'failed';
               error_message = verifyData.message || verifyData.data?.message || 'Verification failed';
@@ -314,6 +367,7 @@ router.post('/verify-bulk', async (req, res) => {
             ...record,
             status,
             error_message,
+            request_id: requestId,
             verified_date: new Date(),
             api_response: verifyData
           };
@@ -361,6 +415,129 @@ router.post('/verify-bulk', async (req, res) => {
       type: categorizedError.type,
       details: categorizedError.details,
       retryable: categorizedError.retryable
+    });
+  }
+});
+
+// Check verification status endpoint
+router.get('/check-status/:requestId', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    console.log(`🔍 Checking status for request: ${requestId}`);
+
+    // 1️⃣ Authenticate
+    const authRes = await fetch("https://api.sandbox.co.in/authenticate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": SANDBOX_API_KEY,
+        "x-api-secret": SANDBOX_API_SECRET,
+      },
+    });
+
+    const authData = await authRes.json();
+    const accessToken = authData.access_token || authData.data?.access_token;
+
+    // 2️⃣ Check status using request ID
+    const statusRes = await fetch(`https://api.sandbox.co.in/kyc/pan/status/${requestId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "authorization": accessToken,
+        "x-api-key": SANDBOX_API_KEY,
+      },
+    });
+
+    console.log(`📡 STATUS HTTP Status: ${statusRes.status} ${statusRes.statusText}`);
+
+    const statusData = await statusRes.json();
+    console.log(`✅ STATUS RESPONSE:`, JSON.stringify(statusData, null, 2));
+
+    res.json({
+      success: true,
+      request_id: requestId,
+      status_response: statusData,
+      http_status: statusRes.status
+    });
+
+  } catch (error) {
+    console.error('❌ STATUS CHECK ERROR:', error);
+    res.status(500).json({
+      error: 'Status check failed',
+      message: error.message
+    });
+  }
+});
+
+// Test endpoint to see raw Sandbox API response
+router.get('/test-sandbox', async (req, res) => {
+  try {
+    console.log('🧪 Testing Sandbox API connection...');
+    
+    // 1️⃣ Authenticate
+    const authRes = await fetch("https://api.sandbox.co.in/authenticate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": SANDBOX_API_KEY,
+        "x-api-secret": SANDBOX_API_SECRET,
+      },
+    });
+
+    const authData = await authRes.json();
+    console.log('🔐 TEST AUTH RESPONSE:', JSON.stringify(authData, null, 2));
+
+    if (!authRes.ok) {
+      return res.status(authRes.status).json({
+        error: 'Authentication failed',
+        auth_response: authData
+      });
+    }
+
+    const accessToken = authData.access_token || authData.data?.access_token;
+    console.log('🔑 TEST Access Token:', accessToken);
+
+    // 2️⃣ Test verification with sample data
+    const testPayload = {
+      "@entity": "in.co.sandbox.kyc.pan_verification.request",
+      pan: "IXDPK9199A",
+      name_as_per_pan: "NEHA KANWAR",
+      date_of_birth: "29/09/2003",  // Back to 4-digit year
+      consent: "Y",
+      reason: "KYC verification test",
+    };
+
+    console.log('📤 TEST VERIFY PAYLOAD:', JSON.stringify(testPayload, null, 2));
+
+    const verifyRes = await fetch("https://api.sandbox.co.in/kyc/pan/verify", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "authorization": accessToken,
+        "x-api-key": SANDBOX_API_KEY,
+        "x-accept-cache": "true",
+      },
+      body: JSON.stringify(testPayload),
+    });
+
+    console.log('📡 TEST HTTP Status:', verifyRes.status, verifyRes.statusText);
+
+    const verifyData = await verifyRes.json();
+    console.log('✅ TEST VERIFY RESPONSE:', JSON.stringify(verifyData, null, 2));
+
+    res.json({
+      success: true,
+      auth_response: authData,
+      verify_response: verifyData,
+      http_status: verifyRes.status,
+      message: 'Test completed - check console for detailed logs'
+    });
+
+  } catch (error) {
+    console.error('❌ TEST ERROR:', error);
+    res.status(500).json({
+      error: 'Test failed',
+      message: error.message
     });
   }
 });
